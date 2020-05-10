@@ -1,5 +1,10 @@
 import Foundation
 
+public protocol MNCalendarDelegate: AnyObject {
+    var selectedDate: Date { get set }
+    func didChangeDisplayDates(_ dates: [Date], calendar: MNCalendar)
+}
+
 public protocol MNCalendarType {
     func getNumberOfDaysInMonth(from date: Date) -> Int
     func getNumberOfDaysInWeek(from date: Date) -> Int
@@ -7,7 +12,11 @@ public protocol MNCalendarType {
     func getYear(of date: Date) -> Int
     func moveToNextMonth()
     func moveToPreviousMonth()
-    func getNumberOfItemsForCurrentMode() -> (dates: [Date], count: Int)
+    func getNumberOfItemsForCurrentMode() -> Int
+}
+
+public enum MNCalendarError: Error {
+    case noDelegate
 }
 
 public enum MNCalendarMode {
@@ -16,38 +25,107 @@ public enum MNCalendarMode {
 }
 
 public class MNCalendar {
+    // MARK: - Constant
     private let calendar: Calendar
     private let timeZone: TimeZone
-
-    private(set) var mode: MNCalendarMode = .month
-    private var currentDates: [Date] = []
-    private var currentDate: Date {
+    private let daysPerWeek: Int = 7
+    
+    // MARK: - Private members
+    private var dates: [Date] = [] {
         didSet {
-            updateCurrent(withDate: currentDate)
+            delegate?.didChangeDisplayDates(dates, calendar: self)
         }
     }
-    private var currentComponents: DateComponents {
-        calendar.dateComponents(in: timeZone, from: currentDate)
+    
+    // MARK: - Accessible members from outside.
+    public var mode: MNCalendarMode = .month {
+        didSet {
+            update()
+        }
+    }
+    public weak var delegate: MNCalendarDelegate? {
+        didSet {
+            update()
+        }
     }
     
-    public init(calendar: Calendar = .current, timeZone: TimeZone = .current, initialDate: Date = .init()) {
+    // MARK: - Initializer
+    public init(calendar: Calendar = .current, timeZone: TimeZone = .current, delegate: MNCalendarDelegate?) {
         self.calendar = calendar
         self.timeZone = timeZone
-        self.currentDate = initialDate
+        self.delegate = delegate
     }
     
-    private func updateCurrent(withDate date: Date) {
-        
+    // MARK: - Private Methods
+    private func update() {
+        guard let delegate = delegate else {
+            return
+        }
+        var dates: [Date] = []
+        let currentDate = delegate.selectedDate
+        guard let ordinalityOfFirstDay = calendar.ordinality(of: .day, in: .weekOfMonth, for: currentDate) else {
+            fatalError()
+        }
+        switch mode {
+        case .month:
+            for i in 0..<getNumberOfDaysInMonth(from: currentDate) {
+                var dateComponents = DateComponents()
+                dateComponents.day = i - (ordinalityOfFirstDay - 1)
+                guard let date = calendar.date(byAdding: dateComponents, to: currentDate) else {
+                    fatalError()
+                }
+                dates.append(date)
+            }
+            
+        case .week:
+            for i in 0..<getNumberOfDaysInWeek(from: currentDate) {
+                var dateComponents = DateComponents()
+                dateComponents.day = i - (ordinalityOfFirstDay - 1)
+                guard let date = calendar.date(byAdding: dateComponents, to: currentDate) else {
+                    fatalError()
+                }
+                dates.append(date)
+            }
+        }
+        self.dates = dates
+    }
+    
+    /// First day of current selecting  date-month.
+    func firstDateOfMonth(from date: Date) -> Date {
+        var components = calendar.dateComponents([.year, .month, .day],
+                                             from: date)
+        components.day = 1
+        guard let firstDateMonth = calendar.date(from: components) else {
+            fatalError()
+        }
+        return firstDateMonth
+    }
+    
+    /// Number of days of selectedDate.
+    func daysAcquisition(of date: Date) -> Int {
+        guard let rangeOfWeeks = calendar.range(of: .weekOfMonth, in: .month, for: firstDateOfMonth(from: date)) else {
+            fatalError()
+        }
+        let numberOfWeeks = rangeOfWeeks.count
+        return numberOfWeeks * daysPerWeek
     }
 }
 
 extension MNCalendar: MNCalendarType {
     public func getNumberOfDaysInMonth(from date: Date) -> Int {
-        
+        var components = calendar.dateComponents(in: timeZone, from: date)
+        let month = calendar.component(.month, from: date) + 1
+        components.month = month
+        components.day = 0
+        guard let lastDate = calendar.date(from: components) else {
+            fatalError()
+        }
+        let dayCount = calendar.component(.day, from: lastDate)
+        return dayCount
     }
     
     public func getNumberOfDaysInWeek(from date: Date) -> Int {
-        
+        7
     }
     
     public func getMonth(of date: Date) -> Int {
@@ -59,28 +137,32 @@ extension MNCalendar: MNCalendarType {
     }
     
     public func moveToNextMonth() {
+        guard let delegate = delegate else {
+            return
+        }
         var components = DateComponents()
         components.day = 1
-        guard let updatedDate = calendar.date(byAdding: components, to: currentDate) else {
+        guard let updatedDate = calendar.date(byAdding: components, to: delegate.selectedDate) else {
             assert(false)
             return
         }
-        self.currentDate = updatedDate
+        delegate.selectedDate = updatedDate
     }
     
     public func moveToPreviousMonth() {
+        guard let delegate = delegate else {
+            return
+        }
         var components = DateComponents()
         components.day = -1
-        guard let updatedDate = calendar.date(byAdding: components, to: currentDate) else {
+        guard let updatedDate = calendar.date(byAdding: components, to: delegate.selectedDate) else {
             assert(false)
             return
         }
-        self.currentDate = updatedDate
+        delegate.selectedDate = updatedDate
     }
     
-    public func getNumberOfItemsForCurrentMode() -> (dates: [Date], count: Int) {
-        fatalError()
+    public func getNumberOfItemsForCurrentMode() -> Int {
+        dates.count
     }
-    
-    
 }
