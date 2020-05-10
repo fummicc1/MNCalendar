@@ -61,7 +61,7 @@ public class MNCalendar {
         }
         var dates: [Date] = []
         let currentDate = delegate.selectedDate
-        guard let ordinalityOfFirstDay = calendar.ordinality(of: .day, in: .weekday, for: currentDate) else {
+        guard let ordinalityOfFirstDay = calendar.ordinality(of: .day, in: .weekOfMonth, for: firstDateOfMonth(from: currentDate)) else {
             fatalError()
         }
         switch mode {
