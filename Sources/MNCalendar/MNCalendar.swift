@@ -13,6 +13,7 @@ public protocol MNCalendarType {
     func moveToNextMonth()
     func moveToPreviousMonth()
     func getNumberOfItemsForCurrentMode() -> Int
+    func isSameDay(_ source: Date, _ destination: Date) -> Bool
 }
 
 public enum MNCalendarError: Error {
@@ -164,5 +165,9 @@ extension MNCalendar: MNCalendarType {
     
     public func getNumberOfItemsForCurrentMode() -> Int {
         dates.count
+    }
+    
+    public func isSameDay(_ source: Date, _ destination: Date) -> Bool {
+        calendar.isDate(source, inSameDayAs: destination)
     }
 }
