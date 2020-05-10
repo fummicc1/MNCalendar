@@ -6,6 +6,7 @@ public protocol MNCalendarDelegate: AnyObject {
 }
 
 public protocol MNCalendarType {
+    var dates: [Date] { get }
     func getNumberOfDaysInMonth(from date: Date) -> Int
     func getNumberOfDaysInWeek(from date: Date) -> Int
     func getMonth(of date: Date) -> Int
@@ -31,14 +32,13 @@ public class MNCalendar {
     private let timeZone: TimeZone
     private let daysPerWeek: Int = 7
     
-    // MARK: - Private members
-    private var dates: [Date] = [] {
+    // MARK: - Accessible members from outside.
+    public var dates: [Date] = [] {
         didSet {
             delegate?.didChangeDisplayDates(dates, calendar: self)
         }
     }
     
-    // MARK: - Accessible members from outside.
     public var mode: MNCalendarMode = .month {
         didSet {
             update()
