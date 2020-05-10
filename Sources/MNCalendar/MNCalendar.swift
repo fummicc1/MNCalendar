@@ -141,7 +141,7 @@ extension MNCalendar: MNCalendarType {
             return
         }
         var components = DateComponents()
-        components.day = 1
+        components.month = 1
         guard let updatedDate = calendar.date(byAdding: components, to: delegate.selectedDate) else {
             assert(false)
             return
@@ -154,7 +154,7 @@ extension MNCalendar: MNCalendarType {
             return
         }
         var components = DateComponents()
-        components.day = -1
+        components.month = -1
         guard let updatedDate = calendar.date(byAdding: components, to: delegate.selectedDate) else {
             assert(false)
             return
