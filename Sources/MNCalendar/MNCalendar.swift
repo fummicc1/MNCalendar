@@ -33,11 +33,7 @@ public class MNCalendar {
     private let daysPerWeek: Int = 7
     
     // MARK: - Accessible members from outside.
-    public var dates: [Date] = [] {
-        didSet {
-            delegate?.didChangeDisplayDates(dates, calendar: self)
-        }
-    }
+    public lazy var dates: [Date] = update()
     
     public var mode: MNCalendarMode = .month {
         didSet {
@@ -55,18 +51,13 @@ public class MNCalendar {
         self.calendar = calendar
         self.timeZone = timeZone
         self.delegate = delegate
-        
-        start()
     }
     
     // MARK: - Private Methods
-    private func start() {
-        update()
-    }
-    
-    private func update() {
+    @discardableResult
+    private func update() -> [Date] {
         guard let delegate = delegate else {
-            return
+            return []
         }
         var dates: [Date] = []
         let currentDate = delegate.selectedDate
@@ -78,7 +69,7 @@ public class MNCalendar {
             for i in 0..<getNumberOfDaysInMonth(from: currentDate) {
                 var dateComponents = DateComponents()
                 dateComponents.day = i - (ordinalityOfFirstDay - 1)
-                guard let date = calendar.date(byAdding: dateComponents, to: currentDate) else {
+                guard let date = calendar.date(byAdding: dateComponents, to: firstDateOfMonth(from: currentDate)) else {
                     fatalError()
                 }
                 dates.append(date)
@@ -95,6 +86,8 @@ public class MNCalendar {
             }
         }
         self.dates = dates
+        delegate.didChangeDisplayDates(dates, calendar: self)
+        return dates
     }
     
     /// First day of current selecting  date-month.
