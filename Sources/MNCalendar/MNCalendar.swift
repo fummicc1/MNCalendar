@@ -55,9 +55,15 @@ public class MNCalendar {
         self.calendar = calendar
         self.timeZone = timeZone
         self.delegate = delegate
+        
+        start()
     }
     
     // MARK: - Private Methods
+    private func start() {
+        update()
+    }
+    
     private func update() {
         guard let delegate = delegate else {
             return
