@@ -66,7 +66,7 @@ public class MNCalendar {
         }
         switch mode {
         case .month:
-            for i in 0..<getNumberOfDaysInMonth(from: currentDate) {
+            for i in 0..<daysAcquisition(of: currentDate) {
                 var dateComponents = DateComponents()
                 dateComponents.day = i - (ordinalityOfFirstDay - 1)
                 guard let date = calendar.date(byAdding: dateComponents, to: firstDateOfMonth(from: currentDate)) else {
