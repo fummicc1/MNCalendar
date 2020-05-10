@@ -147,6 +147,7 @@ extension MNCalendar: MNCalendarType {
             return
         }
         delegate.selectedDate = updatedDate
+        update()
     }
     
     public func moveToPreviousMonth() {
@@ -160,6 +161,7 @@ extension MNCalendar: MNCalendarType {
             return
         }
         delegate.selectedDate = updatedDate
+        update()
     }
     
     public func getNumberOfItemsForCurrentMode() -> Int {
