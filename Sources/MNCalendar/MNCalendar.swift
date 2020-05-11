@@ -1,12 +1,12 @@
 import Foundation
 
 public protocol MNCalendarDelegate: AnyObject {
-    var selectedDate: Date { get set }
     func didChangeDisplayDates(_ dates: [Date], calendar: MNCalendar)
 }
 
 public protocol MNCalendarType {
     var dates: [Date] { get }
+    var selectedDate: Date { get }
     func getNumberOfDaysInMonth(from date: Date) -> Int
     func getNumberOfDaysInWeek(from date: Date) -> Int
     func getMonth(of date: Date) -> Int
@@ -15,6 +15,7 @@ public protocol MNCalendarType {
     func moveToPreviousMonth()
     func getNumberOfItemsForCurrentMode() -> Int
     func isSameDay(_ source: Date, _ destination: Date) -> Bool
+    func updateSelectedDate(_ date: Date)
 }
 
 public enum MNCalendarError: Error {
@@ -34,17 +35,14 @@ public class MNCalendar {
     
     // MARK: - Accessible members from outside.
     public lazy var dates: [Date] = update()
+    public var selectedDate: Date = .init()
     
     public var mode: MNCalendarMode = .month {
         didSet {
             update()
         }
     }
-    public weak var delegate: MNCalendarDelegate? {
-        didSet {
-            update()
-        }
-    }
+    public weak var delegate: MNCalendarDelegate?
     
     // MARK: - Initializer
     public init(calendar: Calendar = .current, timeZone: TimeZone = .current, delegate: MNCalendarDelegate?) {
@@ -60,7 +58,7 @@ public class MNCalendar {
             return []
         }
         var dates: [Date] = []
-        let currentDate = delegate.selectedDate
+        let currentDate = selectedDate
         guard let ordinalityOfFirstDay = calendar.ordinality(of: .day, in: .weekOfMonth, for: firstDateOfMonth(from: currentDate)) else {
             fatalError()
         }
@@ -137,30 +135,24 @@ extension MNCalendar: MNCalendarType {
     }
     
     public func moveToNextMonth() {
-        guard let delegate = delegate else {
-            return
-        }
         var components = DateComponents()
         components.month = 1
-        guard let updatedDate = calendar.date(byAdding: components, to: delegate.selectedDate) else {
+        guard let updatedDate = calendar.date(byAdding: components, to: selectedDate) else {
             assert(false)
             return
         }
-        delegate.selectedDate = updatedDate
+        selectedDate = updatedDate
         update()
     }
     
     public func moveToPreviousMonth() {
-        guard let delegate = delegate else {
-            return
-        }
         var components = DateComponents()
         components.month = -1
-        guard let updatedDate = calendar.date(byAdding: components, to: delegate.selectedDate) else {
+        guard let updatedDate = calendar.date(byAdding: components, to: selectedDate) else {
             assert(false)
             return
         }
-        delegate.selectedDate = updatedDate
+        selectedDate = updatedDate
         update()
     }
     
@@ -170,5 +162,10 @@ extension MNCalendar: MNCalendarType {
     
     public func isSameDay(_ source: Date, _ destination: Date) -> Bool {
         calendar.isDate(source, inSameDayAs: destination)
+    }
+    
+    public func updateSelectedDate(_ date: Date) {
+        self.selectedDate = date
+        update()
     }
 }
