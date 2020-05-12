@@ -7,6 +7,7 @@ public protocol MNCalendarDelegate: AnyObject {
 public protocol MNCalendarType {
     var dates: [Date] { get }
     var currentDate: Date { get }
+    var selectedDate: Date? { get }
     func getNumberOfDaysInMonth(from date: Date) -> Int
     func getNumberOfDaysInWeek(from date: Date) -> Int
     func getMonth(of date: Date) -> Int
