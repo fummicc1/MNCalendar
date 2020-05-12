@@ -6,7 +6,7 @@ public protocol MNCalendarDelegate: AnyObject {
 
 public protocol MNCalendarType {
     var dates: [Date] { get }
-    var selectedDate: Date { get }
+    var currentDate: Date { get }
     func getNumberOfDaysInMonth(from date: Date) -> Int
     func getNumberOfDaysInWeek(from date: Date) -> Int
     func getMonth(of date: Date) -> Int
@@ -35,7 +35,8 @@ public class MNCalendar {
     
     // MARK: - Accessible members from outside.
     public lazy var dates: [Date] = update()
-    public var selectedDate: Date = .init()
+    public var currentDate: Date = .init()
+    public var selectedDate: Date?
     
     public var mode: MNCalendarMode = .month {
         didSet {
@@ -58,7 +59,6 @@ public class MNCalendar {
             return []
         }
         var dates: [Date] = []
-        let currentDate = selectedDate
         guard let ordinalityOfFirstDay = calendar.ordinality(of: .day, in: .weekOfMonth, for: firstDateOfMonth(from: currentDate)) else {
             fatalError()
         }
@@ -137,22 +137,22 @@ extension MNCalendar: MNCalendarType {
     public func moveToNextMonth() {
         var components = DateComponents()
         components.month = 1
-        guard let updatedDate = calendar.date(byAdding: components, to: selectedDate) else {
+        guard let updatedDate = calendar.date(byAdding: components, to: currentDate) else {
             assert(false)
             return
         }
-        selectedDate = updatedDate
+        currentDate = updatedDate
         update()
     }
     
     public func moveToPreviousMonth() {
         var components = DateComponents()
         components.month = -1
-        guard let updatedDate = calendar.date(byAdding: components, to: selectedDate) else {
+        guard let updatedDate = calendar.date(byAdding: components, to: currentDate) else {
             assert(false)
             return
         }
-        selectedDate = updatedDate
+        currentDate = updatedDate
         update()
     }
     
@@ -166,6 +166,5 @@ extension MNCalendar: MNCalendarType {
     
     public func updateSelectedDate(_ date: Date) {
         self.selectedDate = date
-        update()
     }
 }
