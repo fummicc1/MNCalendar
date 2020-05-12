@@ -2,6 +2,7 @@ import Foundation
 
 public protocol MNCalendarDelegate: AnyObject {
     func didChangeDisplayDates(_ dates: [Date], calendar: MNCalendar)
+    func didChangeSelectedDate(_ date: Date, calendar: MNCalendar)
 }
 
 public protocol MNCalendarType {
@@ -167,5 +168,6 @@ extension MNCalendar: MNCalendarType {
     
     public func updateSelectedDate(_ date: Date) {
         self.selectedDate = date
+        delegate?.didChangeSelectedDate(date, calendar: self)
     }
 }
